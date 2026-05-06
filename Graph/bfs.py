@@ -1,40 +1,40 @@
 class Graph:
     def __init__(self):
-        self.vertices = {}
+        self.graph = {}
 
-    def add_vertex(self, v):
-        if v not in self.vertices:
-            self.vertices[v] = []
-            print("Vertex added")
+    def add_node(self, node):
+        if node not in self.graph:
+            self.graph[node] = []
+            print("Node added")
         else:
-            print("Vertex already exists")
+            print("Node already exists")
 
     def add_edge(self, u, v, cost=0):
-        if u in self.vertices and v in self.vertices:
-            if (v, cost) in self.vertices[u]:
+        if u in self.graph and v in self.graph:
+            if (v, cost) in self.graph[u]:
                 print("Edge already exists")
             else:
-                self.vertices[u].append((v, cost))
-                self.vertices[v].append((u, cost))
+                self.graph[u].append((v, cost))
+                self.graph[v].append((u, cost))
                 print("Edge added")
         else:
-            print("Add vertices first")
+            print("Add nodes first")
 
-    def delete_vertex(self, v):
-        if v in self.vertices:
-            self.vertices.pop(v)
-            for n in self.vertices:
-                self.vertices[n] = [(x, c) for x, c in self.vertices[n] if x != v]
-            print("Vertex deleted")
+    def delete_node(self, node):
+        if node in self.graph:
+            self.graph.pop(node)
+            for n in self.graph:
+                self.graph[n] = [(x, c) for x, c in self.graph[n] if x != node]
+            print("Node deleted")
         else:
-            print("Vertex not found")
+            print("Node not found")
 
     def delete_edge(self, u, v):
-        if u in self.vertices:
-            before = len(self.vertices[u])
-            self.vertices[u] = [(x, c) for x, c in self.vertices[u] if x != v]
-            self.vertices[v] = [(x, c) for x, c in self.vertices[v] if x != u]
-            if len(self.vertices[u]) < before:
+        if u in self.graph:
+            before = len(self.graph[u])
+            self.graph[u] = [(x, c) for x, c in self.graph[u] if x != v]
+            self.graph[v] = [(x, c) for x, c in self.graph[v] if x != u]
+            if len(self.graph[u]) < before:
                 print("Edge deleted")
             else:
                 print("Edge not found")
@@ -43,65 +43,62 @@ class Graph:
 
     def display(self):
         print("\nGraph:")
-        for v in self.vertices:
-            print(v, "-", self.vertices[v])
+        for node in self.graph:
+            print(node, "-", self.graph[node])
 
-    def display_adj(self, v):
-        if v in self.vertices:
-            print(v, "-", self.vertices[v])
+    def display_adj(self, node):
+        if node in self.graph:
+            print(node, "-", self.graph[node])
         else:
-            print("Vertex not found")
+            print("Node not found")
 
-    def bfs_lr(self, start, goal=None):
-        if start == goal:
-            print(f"Start is goal! Path: {start}")
+    def bfs(self, start, goal, rtl=True):
+        if start not in self.graph:
+            print("Error: Start node not found")
             return
-        explored = set()
-        queue = [(start, [start])]
-        itr = 1
-        print(f"\n{'Iter':<10} | {'Queue':<30} | {'Explored'}")
-        print("-" * 60)
-        while queue:
-            print(f"{itr:<10} | {str([x[0] for x in queue]):<30} | {sorted(explored)}")
-            node, path = queue.pop(0)  # FIFO - pop from front
-            if node not in explored:
-                explored.add(node)
-                if node == goal:
-                    print(f"\nGoal '{goal}' reached! Path: {' -> '.join(path)}")
-                    return
-                for nb, _ in self.vertices[node]:
-                    if nb not in explored and nb not in [x[0] for x in queue]:
-                        queue.append((nb, path + [nb]))
-            itr += 1
-        print(f"\nGoal '{goal}' not found.")
+        if goal not in self.graph:
+            print("Error: Goal node not found")
+            return
 
-    def bfs_rl(self, start, goal=None):
-        if start == goal:
-            print(f"Start is goal! Path: {start}")
-            return
-        explored = set()
-        queue = [(start, [start])]
+        queue = [start]
+        explored = []
+        parent = {start: None}
+
         itr = 1
-        print(f"\n{'Iter':<10} | {'Queue':<30} | {'Explored'}")
-        print("-" * 60)
+        print("\nIter | Queue | Explored")
+        print("-" * 40)
+
         while queue:
-            print(f"{itr:<10} | {str([x[0] for x in queue]):<30} | {sorted(explored)}")
-            node, path = queue.pop(0)  # FIFO - pop from front
-            if node not in explored:
-                explored.add(node)
-                if node == goal:
-                    print(f"\nGoal '{goal}' reached! Path: {' -> '.join(path)}")
-                    return
-                for nb, _ in reversed(self.vertices[node]):
-                    if nb not in explored and nb not in [x[0] for x in queue]:
-                        queue.append((nb, path + [nb]))
+            print(f"{itr:>4} | {queue} | {explored}")
             itr += 1
-        print(f"\nGoal '{goal}' not found.")
+
+            node = queue.pop(0)
+            if node not in explored:
+                explored.append(node)
+
+                if node == goal:
+                    path = []
+                    temp = goal
+                    while temp is not None:
+                        path.append(temp)
+                        temp = parent[temp]
+                    path.reverse()
+                    print("\nExplored Order:", explored)
+                    print("Path:", " -> ".join(path))
+                    return
+
+                children = sorted([child for child, _ in self.graph[node]], reverse=rtl)
+                for child in children:
+                    if child not in parent:
+                        queue.append(child)
+                        parent[child] = node
+
+        print("Error: Goal not reachable")
 
 
 g = Graph()
 print("\n--- BFS MENU ---")
-print("1 Add Vertex\n2 Add Edge\n3 Delete Vertex\n4 Delete Edge")
+print("1 Add Node\n2 Add Edge\n3 Delete Node\n4 Delete Edge")
 print("5 Display Graph\n6 Display Adjacency List")
 print("7 BFS Left to Right\n8 BFS Right to Left\n9 Exit")
 
@@ -112,21 +109,21 @@ while True:
         print("Enter a valid number")
         continue
     if ch == 1:
-        g.add_vertex(input("Vertex: "))
+        g.add_node(input("Node: "))
     elif ch == 2:
         g.add_edge(input("From: "), input("To: "), int(input("Cost (0 if none): ")))
     elif ch == 3:
-        g.delete_vertex(input("Vertex: "))
+        g.delete_node(input("Node: "))
     elif ch == 4:
         g.delete_edge(input("From: "), input("To: "))
     elif ch == 5:
         g.display()
     elif ch == 6:
-        g.display_adj(input("Vertex: "))
+        g.display_adj(input("Node: "))
     elif ch == 7:
-        g.bfs_lr(input("Start: "), input("Goal: "))
+        g.bfs(input("Start: "), input("Goal: "), rtl=False)  # Left to Right
     elif ch == 8:
-        g.bfs_rl(input("Start: "), input("Goal: "))
+        g.bfs(input("Start: "), input("Goal: "), rtl=True)   # Right to Left
     elif ch == 9:
         print("Program terminated")
         break
